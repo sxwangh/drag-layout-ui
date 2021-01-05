@@ -1,0 +1,13 @@
+version: '2.1'
+services:
+  my-emoti-mate:
+        image: nginx
+        container_name: mate
+        ports:
+            - '10030:80'
+            - '10033:443'
+        volumes:
+            - ../dist:/var/www/dist
+            - ./nginx.conf:/etc/nginx/nginx.conf
+            - ./ssl:/etc/nginx/https
+        restart: always

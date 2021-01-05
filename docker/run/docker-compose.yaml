@@ -1,0 +1,16 @@
+version: '3'
+services:
+  im-chat-poc:
+    container_name: im-chat-poc
+    image: harbor.emotibot.com/csa/csa-ui-client:a3206f0-20201019-1946
+    ports:
+      - 17000:80
+      - 17007:443
+    environment:
+      - OPEN_API=11.0.0.118
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-file: "10"
+        max-size: "5m"

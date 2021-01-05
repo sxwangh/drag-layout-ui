@@ -1,0 +1,65 @@
+# 指定以 nignx 用户权限启动
+user  nginx;
+worker_processes  10;
+
+error_log  /var/log/nginx/error.log warn;
+#pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    # resolver 8.8.8.8 valid=100s ipv6=off;
+    resolver ${NAMESERVER}  valid=30s ipv6=off;
+
+    # header 下划线变量配置
+    underscores_in_headers on;
+
+    log_format upstream_logging '[$time_local] $remote_addr -- to: $upstream_addr: $request -- upstream_response_time $upstream_response_time request_time $request_time';
+
+    # 上传文件最大为200MB
+    client_max_body_size 200M;
+    # 启用或禁用gzipping响应。#
+    gzip on;
+    # 设置用于压缩响应的缓冲区number和size。默认情况下，缓冲区大小等于一个内存页面。这是4K或8K，具体取决于平台。#
+    gzip_static on;
+
+
+    server {
+        listen 80;
+        listen 443 ssl;
+
+        ssl_certificate /etc/nginx/https/server.crt;
+        ssl_certificate_key /etc/nginx/https/server.key;
+
+        ssl_session_cache    shared:SSL:1m;
+        ssl_session_timeout  5m;
+
+        ssl_ciphers  HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers  on;
+
+        access_log /var/log/nginx/access.log upstream_logging;
+
+        proxy_set_header Authorization $http_app_id;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Appid $http_app_id;
+        proxy_set_header X-UserID $http_user_id;
+
+        # /Files will go here TODO port
+        location / {
+           root /var/www/dist;
+           index index.html index.htm;
+        }
+        location /ccs/v1/ccs/openapi {
+          proxy_pass  http://11.0.0.118;
+        }
+        location /v1/feedback {
+          proxy_pass  http://11.0.0.118:9080;
+        }
+    }
+}
