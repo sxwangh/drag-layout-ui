@@ -5,6 +5,7 @@
         Droppable Element (Drag me!)
       </div>
       <div class="button" @click="getResData()">计算数据</div>
+      <div class="button" @click="openNew()">预览生成界面布局</div>
     </div>
     <div class="right">
       <div class="right-top">
@@ -22,19 +23,21 @@
         <div style="background: #f9f6ff;display: inline-block;width: 50%;">
           行:<br/>
           默认rowHeight: 20px;<br/>
-          拖拽后计算：row-num: {{rowNum}}
+          contentHeight = rowNum * rowHeight + ((rowNum + 1) * margin)<br/>
+          拖拽后   通过计算得出rowNum: <span style="color: red">{{rowNum}}</span> ==  用于新页面生成<br/>
         </div>
       </div>
       <!--col-num 列数-->
       <!--row-height 每行的高度 default: 150-->
       <!--vertical-compact 标识布局是否垂直压缩-->
       <!--margin defalut [10,10] 间隔-->
-      <div class="right-bottom" id="content">
+      <div class="right-bottom">
         <grid-layout
+                id="content"
                 ref="gridlayout"
                 :layout.sync="layout"
-                :col-num="10"
-                :row-height="20"
+                :col-num="colNum"
+                :row-height="rowHeight"
                 :is-draggable="true"
                 :is-resizable="true"
                 :is-mirrored="false"
@@ -64,163 +67,167 @@
 <script>
 
 import { GridLayout, GridItem } from 'vue-grid-layout';
+import dragMixin from './mixin/dragMixin.vue';
 
-const mouseXY = { x: null, y: null };
-const DragPos = {
-  x: null, y: null, w: 1, h: 1, i: null,
-};
+// const mouseXY = { x: null, y: null };
+// const DragPos = {
+//   x: null, y: null, w: 1, h: 1, i: null,
+// };
+
+
+// 设置界面用
+function getRowNum(rowHeight, margin=10) {
+  // contentHeight = rowNum * rowHeight + ((rowNum + 1) * margin)   == (rowNum * (rowHeight + margin)) + margin  === rowNum * (20 + 10) + 10 === (rowNum * 30) + 10
+  const parentRect = document.getElementById('content').getBoundingClientRect();
+  const rowNum = (parentRect.height - margin) / (rowHeight + margin);
+  return rowNum;
+}
 
 export default {
   name: 'App',
+  mixins: [
+    dragMixin,
+  ],
   components: {
     GridLayout,
     GridItem,
   },
   data() {
     return {
-      colNum: 10,
-      rowHeight: 20,
-      rowNum: null,
-      layout: [
-        {
-          x: 0, y: 0, w: 5, h: 14, i: '1',
-        },
-        {
-          x: 5, y: 0, w: 3, h: 1, i: '2',
-        },
-        {
-          x: 5, y: 1, w: 2, h: 13, i: '3',
-        },
-        {
-          x: 7, y: 1, w: 1, h: 13, i: '4',
-        },
-        {
-          x: 8, y: 0, w: 2, h: 14, i: '5',
-        },
-      ],
+      // colNum: 10,
+      // rowHeight: 20,
+      // rowNum: null, // 通过layout获取
+      // layout: [
+      //   {
+      //     x: 0, y: 0, w: 5, h: 14, i: '1',
+      //   },
+      //   {
+      //     x: 5, y: 0, w: 3, h: 1, i: '2',
+      //   },
+      //   {
+      //     x: 5, y: 1, w: 2, h: 13, i: '3',
+      //   },
+      //   {
+      //     x: 7, y: 1, w: 1, h: 13, i: '4',
+      //   },
+      //   {
+      //     x: 8, y: 0, w: 2, h: 14, i: '5',
+      //   },
+      // ],
     };
   },
   methods: {
     getResData() {
+      // get row-num 第二种方法
+      // contentHeight = rowNum * rowHeight + ((rowNum + 1) * margin)   == (rowNum * (rowHeight + margin)) + margin  === rowNum * (20 + 10) + 10 === (rowNum * 30) + 10
+      const parentRect = document.getElementById('content').getBoundingClientRect();
+      this.rowNum = getRowNum(Number(this.rowHeight), 10);
+      console.log(`通过计算得出rowNum 为: ${this.rowNum2}`);
+      // TODO 生成页： clientHeight / this.rowNum = rowHeight (layout中设置rowHeight);
+      // TODO 存储生成数据
       const layoutJson = JSON.stringify(this.layout);
       localStorage.setItem('layoutJson', layoutJson);
       localStorage.setItem('colNum', this.colNum);
-      localStorage.setItem('rowHeight', this.rowHeight);
-      // get row-num
-      // const layoutContainerDom = document.getElementsByClassName('vue-grid-layout')[0];
-      // console.log(`${layoutContainerDom.clientHeight}px`);
-      // const fullHeight = layoutContainerDom.clientHeight - 20;
-      // this.rowNum = fullHeight / this.rowHeight;
-      // 取统一列中（x相同），h相加，和最大的，设为rowNum
-      const obj = {};
-      let maxRowNum = 0;
-      this.layout.forEach((item) => {
-        // 序列化 {"x":h-plus,"5":16,"7":13,"8":16}
-        if (Object.prototype.hasOwnProperty.call(obj, item.x)) { // obj.hasOwnProperty(item.x);
-          obj[item.x] += item.h;
-        } else {
-          obj[item.x] = item.h;
-        }
-        // 获取序列化数据中h最大值
-        if (obj[item.x] > maxRowNum) {
-          maxRowNum = obj[item.x];
-        }
-      });
-      console.log(`layout数组，相同x序列化数据为：${JSON.stringify(obj, null, '')}`);
-      console.log(`layout相同x的h数量相加，数据整合，挑选最大的h设置为layout的colNum：${maxRowNum}`);
-      this.rowNum = maxRowNum;
-      // TODO 生成页： clientHeight / this.rowNum = rowHeight (layout中设置rowHeight);
+      localStorage.setItem('rowNum', this.rowNum);
     },
-    removeItem(val) {
-      const index = this.layout.map(item => item.i).indexOf(val);
-      this.layout.splice(index, 1);
-    },
+    // removeItem(val) {
+    //   const index = this.layout.map(item => item.i).indexOf(val);
+    //   this.layout.splice(index, 1);
+    // },
     // drag
-    drag(e) {
-      const parentRect = document.getElementById('content').getBoundingClientRect();
-      let mouseInGrid = false;
-      if (((mouseXY.x > parentRect.left) && (mouseXY.x < parentRect.right)) && ((mouseXY.y > parentRect.top) && (mouseXY.y < parentRect.bottom))) {
-        mouseInGrid = true;
-      }
-      if (mouseInGrid === true && (this.layout.findIndex(item => item.i === 'drop')) === -1) {
-        this.layout.push({
-          x: (this.layout.length * 2) % (this.colNum || 12),
-          y: this.layout.length + (this.colNum || 12), // puts it at the bottom
-          w: 1,
-          h: 1,
-          i: 'drop',
-        });
-      }
-      const index = this.layout.findIndex(item => item.i === 'drop');
-      if (index !== -1) {
-        try {
-          this.$refs.gridlayout.$children[this.layout.length].$refs.item.style.display = 'none';
-        } catch {
-          console.log(e);
-        }
-        const el = this.$refs.gridlayout.$children[index];
-        el.dragging = { top: mouseXY.y - parentRect.top, left: mouseXY.x - parentRect.left };
-        const new_pos = el.calcXY(mouseXY.y - parentRect.top, mouseXY.x - parentRect.left);
-        if (mouseInGrid === true) {
-          this.$refs.gridlayout.dragEvent('dragstart', 'drop', new_pos.x, new_pos.y, 1, 1);
-          DragPos.i = String(index);
-          DragPos.x = this.layout[index].x;
-          DragPos.y = this.layout[index].y;
-        }
-        if (mouseInGrid === false) {
-          this.$refs.gridlayout.dragEvent('dragend', 'drop', new_pos.x, new_pos.y, 1, 1);
-          this.layout = this.layout.filter(obj => obj.i !== 'drop');
-        }
-      }
-    },
-    dragend(e) {
-      console.log(e);
-      const parentRect = document.getElementById('content').getBoundingClientRect();
-      let mouseInGrid = false;
-      if (((mouseXY.x > parentRect.left) && (mouseXY.x < parentRect.right)) && ((mouseXY.y > parentRect.top) && (mouseXY.y < parentRect.bottom))) {
-        mouseInGrid = true;
-      }
-      if (mouseInGrid === true) {
-        alert(`Dropped element props:\n${JSON.stringify(DragPos, ['x', 'y', 'w', 'h'], 2)}`);
-        this.$refs.gridlayout.dragEvent('dragend', 'drop', DragPos.x, DragPos.y, 1, 1);
-        this.layout = this.layout.filter(obj => obj.i !== 'drop');
-        // UNCOMMENT below if you want to add a grid-item
-        this.layout.push({
-          x: DragPos.x,
-          y: DragPos.y,
-          w: 1,
-          h: 1,
-          i: Number(DragPos.i) + 1,
-        });
-        // this.$refs.gridlayout.dragEvent('dragend', DragPos.i, DragPos.x, DragPos.y, 1, 1);
-        // try {
-        //   this.$refs.gridlayout.$children[this.layout.length].$refs.item.style.display = 'block';
-        // } catch {
-        //   console.log('e');
-        // }
-      }
+    // drag(e) {
+    //   const parentRect = document.getElementById('content').getBoundingClientRect();
+    //   let mouseInGrid = false;
+    //   if (((mouseXY.x > parentRect.left) && (mouseXY.x < parentRect.right)) && ((mouseXY.y > parentRect.top) && (mouseXY.y < parentRect.bottom))) {
+    //     mouseInGrid = true;
+    //   }
+    //   if (mouseInGrid === true && (this.layout.findIndex(item => item.i === 'drop')) === -1) {
+    //     this.layout.push({
+    //       x: (this.layout.length * 2) % (this.colNum || 12),
+    //       y: this.layout.length + (this.colNum || 12), // puts it at the bottom
+    //       w: 1,
+    //       h: 1,
+    //       i: 'drop',
+    //     });
+    //   }
+    //   const index = this.layout.findIndex(item => item.i === 'drop');
+    //   if (index !== -1) {
+    //     try {
+    //       this.$refs.gridlayout.$children[this.layout.length].$refs.item.style.display = 'none';
+    //     } catch {
+    //       console.log(e);
+    //     }
+    //     const el = this.$refs.gridlayout.$children[index];
+    //     el.dragging = { top: mouseXY.y - parentRect.top, left: mouseXY.x - parentRect.left };
+    //     const new_pos = el.calcXY(mouseXY.y - parentRect.top, mouseXY.x - parentRect.left);
+    //     if (mouseInGrid === true) {
+    //       this.$refs.gridlayout.dragEvent('dragstart', 'drop', new_pos.x, new_pos.y, 1, 1);
+    //       DragPos.i = String(index);
+    //       DragPos.x = this.layout[index].x;
+    //       DragPos.y = this.layout[index].y;
+    //     }
+    //     if (mouseInGrid === false) {
+    //       this.$refs.gridlayout.dragEvent('dragend', 'drop', new_pos.x, new_pos.y, 1, 1);
+    //       this.layout = this.layout.filter(obj => obj.i !== 'drop');
+    //     }
+    //   }
+    // },
+    // dragend(e) {
+    //   console.log(e);
+    //   const parentRect = document.getElementById('content').getBoundingClientRect();
+    //   let mouseInGrid = false;
+    //   if (((mouseXY.x > parentRect.left) && (mouseXY.x < parentRect.right)) && ((mouseXY.y > parentRect.top) && (mouseXY.y < parentRect.bottom))) {
+    //     mouseInGrid = true;
+    //   }
+    //   if (mouseInGrid === true) {
+    //     alert(`Dropped element props:\n${JSON.stringify(DragPos, ['x', 'y', 'w', 'h'], 2)}`);
+    //     this.$refs.gridlayout.dragEvent('dragend', 'drop', DragPos.x, DragPos.y, 1, 1);
+    //     this.layout = this.layout.filter(obj => obj.i !== 'drop');
+    //     // UNCOMMENT below if you want to add a grid-item
+    //     this.layout.push({
+    //       x: DragPos.x,
+    //       y: DragPos.y,
+    //       w: 1,
+    //       h: 1,
+    //       i: Number(DragPos.i) + 1,
+    //     });
+    //     // this.$refs.gridlayout.dragEvent('dragend', DragPos.i, DragPos.x, DragPos.y, 1, 1);
+    //     // try {
+    //     //   this.$refs.gridlayout.$children[this.layout.length].$refs.item.style.display = 'block';
+    //     // } catch {
+    //     //   console.log('e');
+    //     // }
+    //   }
+    // },
+    openNew() {
+      window.open('/login.html', '_blank');
     },
   },
   created() {
-    const layoutJson = localStorage.getItem('layoutJson');
-    const colNum = localStorage.getItem('colNum');
-    const rowHeight = localStorage.getItem('rowHeight');
-    if (layoutJson) {
-      this.layout = JSON.parse(layoutJson);
-    }
-    if (colNum) {
-      this.colNum = colNum;
-    }
-    if (rowHeight) {
-      this.rowHeight = rowHeight;
-    }
+    // 默认初始值 colNum rowHeight layout
+    this.layout = [
+      {
+        x: 0, y: 0, w: 5, h: 14, i: '1',
+      },
+      {
+        x: 5, y: 0, w: 3, h: 1, i: '2',
+      },
+      {
+        x: 5, y: 1, w: 2, h: 13, i: '3',
+      },
+      {
+        x: 7, y: 1, w: 1, h: 13, i: '4',
+      },
+      {
+        x: 8, y: 0, w: 2, h: 14, i: '5',
+      },
+    ];
+    this.colNum = 10;
+    this.rowHeight = 20;
+    // TODO 1 点击预览：需要通过 rowHeight来计算 rowNum 传递给 生成界面
   },
   mounted() {
-    // drag
-    document.addEventListener('dragover', (e) => {
-      mouseXY.x = e.clientX;
-      mouseXY.y = e.clientY;
-    }, false);
+    this.addListener();
   },
 };
 </script>
@@ -235,6 +242,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-top: 10px;
     &:hover {
       opacity: 0.7;
     }
