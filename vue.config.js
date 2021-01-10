@@ -26,7 +26,8 @@ module.exports = {
     },
   },
   devServer: {
-    index: '/login.html', // 默认启动serve  http://localhost:8080/  打开的页面 login.html
+    // index: '/login.html',
+    index: '/index.html', // 默认启动serve  http://localhost:8080/  打开的页面 login.html
     open: process.platform === 'darwin',
     host: '0.0.0.0',
     port: 8080,

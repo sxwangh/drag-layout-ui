@@ -11,7 +11,6 @@ vue.config.js中配置
 ### 拖拽布局
 
 ##### 第一步: install
-
 ```
 https://jbaysolutions.github.io/vue-grid-layout/guide/
 npm install vue-grid-layout --save

@@ -8,13 +8,14 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "express-ws": "^4.0.0",
-    "ws": "^7.2.1",
     "axios": "^0.20.0",
     "core-js": "^2.6.5",
     "element-ui": "^2.13.2",
-    "vue": "^2.6.10"
+    "express": "^4.17.1",
+    "express-ws": "^4.0.0",
+    "vue": "^2.6.10",
+    "vue-grid-layout": "^2.3.11",
+    "ws": "^7.2.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.4",
@@ -43,6 +44,7 @@
       "no-param-reassign": 0,
       "no-alert": 0,
       "no-console": 0,
+      "no-debugger": 0,
       "camelcase": 0
     },
     "parserOptions": {
