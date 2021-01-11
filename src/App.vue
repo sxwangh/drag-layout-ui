@@ -1,8 +1,11 @@
 <template>
   <div id="app">
     <div class="left">
-      <div @drag="drag" @dragend="dragend" class="droppable-element" draggable="true" unselectable="on">
-        Droppable Element (Drag me!)
+      <div @drag="drag($event, 1)" @dragend="dragend($event, 1)" class="droppable-element" draggable="true" unselectable="on">
+        自定义：别拖我吧。 Droppable Element (Drag me!)
+      </div>
+      <div @drag="drag($event, item)" @dragend="dragend($event, item)" class="droppable-element-basic" draggable="true" unselectable="on" v-for="item in dragDOMs" :key="item.id">
+        {{item.name}}-拖拽
       </div>
       <div class="button" @click="getResData()">计算数据</div>
       <div class="button" @click="openNew()">预览生成界面布局</div>
@@ -55,8 +58,10 @@
                      :h="item.h"
                      :i="item.i"
                      :key="item.i">
-            {{item.i}}
-            <span class="remove" @click="removeItem(item.i)">x</span>
+            <div slot="">
+              <span>name:{{item.name}}</span>
+            </div>
+            <span class="remove" @click="removeItem(item)">x</span>
           </grid-item>
         </grid-layout>
       </div>
@@ -68,15 +73,11 @@
 
 import { GridLayout, GridItem } from 'vue-grid-layout';
 import dragMixin from './mixin/dragMixin.vue';
-
-// const mouseXY = { x: null, y: null };
-// const DragPos = {
-//   x: null, y: null, w: 1, h: 1, i: null,
-// };
+import dragBasicMixin from './mixin/dragBasicMixin.vue';
 
 
 // 设置界面用
-function getRowNum(rowHeight, margin=10) {
+function getRowNum(rowHeight, margin = 10) {
   // contentHeight = rowNum * rowHeight + ((rowNum + 1) * margin)   == (rowNum * (rowHeight + margin)) + margin  === rowNum * (20 + 10) + 10 === (rowNum * 30) + 10
   const parentRect = document.getElementById('content').getBoundingClientRect();
   const rowNum = (parentRect.height - margin) / (rowHeight + margin);
@@ -87,6 +88,7 @@ export default {
   name: 'App',
   mixins: [
     dragMixin,
+    dragBasicMixin,
   ],
   components: {
     GridLayout,
@@ -94,33 +96,12 @@ export default {
   },
   data() {
     return {
-      // colNum: 10,
-      // rowHeight: 20,
-      // rowNum: null, // 通过layout获取
-      // layout: [
-      //   {
-      //     x: 0, y: 0, w: 5, h: 14, i: '1',
-      //   },
-      //   {
-      //     x: 5, y: 0, w: 3, h: 1, i: '2',
-      //   },
-      //   {
-      //     x: 5, y: 1, w: 2, h: 13, i: '3',
-      //   },
-      //   {
-      //     x: 7, y: 1, w: 1, h: 13, i: '4',
-      //   },
-      //   {
-      //     x: 8, y: 0, w: 2, h: 14, i: '5',
-      //   },
-      // ],
     };
   },
   methods: {
     getResData() {
       // get row-num 第二种方法
       // contentHeight = rowNum * rowHeight + ((rowNum + 1) * margin)   == (rowNum * (rowHeight + margin)) + margin  === rowNum * (20 + 10) + 10 === (rowNum * 30) + 10
-      const parentRect = document.getElementById('content').getBoundingClientRect();
       this.rowNum = getRowNum(Number(this.rowHeight), 10);
       console.log(`通过计算得出rowNum 为: ${this.rowNum2}`);
       // TODO 生成页： clientHeight / this.rowNum = rowHeight (layout中设置rowHeight);
@@ -207,23 +188,23 @@ export default {
     // 默认初始值 colNum rowHeight layout
     this.layout = [
       {
-        x: 0, y: 0, w: 5, h: 14, i: '1',
+        x: 0, y: 0, w: 5, h: 14, i: '0', index: 0, id: 'intent', name: '意图',
       },
       {
-        x: 5, y: 0, w: 3, h: 1, i: '2',
+        x: 5, y: 0, w: 3, h: 1, i: '1', index: 1, id: 'image', name: '画像',
       },
       {
-        x: 5, y: 1, w: 2, h: 13, i: '3',
+        x: 5, y: 1, w: 2, h: 13, i: '2', index: 2, id: 'flow', name: '流程',
       },
       {
-        x: 7, y: 1, w: 1, h: 13, i: '4',
+        x: 7, y: 1, w: 1, h: 13, i: '3', index: 3, id: 'chat', name: '对话',
       },
       {
-        x: 8, y: 0, w: 2, h: 14, i: '5',
+        x: 8, y: 0, w: 2, h: 14, i: '4', index: 4, id: 'know', name: '知识',
       },
     ];
     this.colNum = 10;
-    this.rowHeight = 20;
+    this.rowHeight = 40;
     // TODO 1 点击预览：需要通过 rowHeight来计算 rowNum 传递给 生成界面
   },
   mounted() {
@@ -251,6 +232,21 @@ export default {
     width: 150px;
     text-align: center;
     background: #fdd;
+    border: 1px solid black;
+    margin: 10px 0;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+  .droppable-element-basic {
+    width: 150px;
+    text-align: center;
+    background: oldlace;
     border: 1px solid black;
     margin: 10px 0;
     padding: 10px;

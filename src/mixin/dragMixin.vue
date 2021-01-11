@@ -1,5 +1,13 @@
 
 <script>
+/*
+  === （设置） ===
+  1. @data：
+  2. @methods：
+              1) drag拖动
+              2) dragend拖动确定后layout。push
+              3) addListener mounted中调用监听
+*/
 const mouseXY = { x: null, y: null };
 const DragPos = {
   x: null, y: null, w: 1, h: 1, i: null,
@@ -9,20 +17,36 @@ export default {
   name: 'dragMixin',
   data() {
     return {
-      colNum: null, // 10
-      rowHeight: null, // 20 设置界面 （设置界面 需要先通过rowHeight来计算 rowNum）
-      rowNum: null, // 通过计算获取 （生成页面需要先通过rowNum来计算 rowHeight）
-      layout: [],
-      // margin  默认为10
+      dragDOMs: [
+        // {
+        //   index: 0,
+        //   id: 'intent',
+        //   name: '意图',
+        // }, {
+        //   index: 1,
+        //   id: 'image',
+        //   name: '画像',
+        // }, {
+        //   index: 2,
+        //   id: 'flow',
+        //   name: '流程',
+        // }, {
+        //   index: 3,
+        //   id: 'chat',
+        //   name: '对话',
+        // }, {
+        //   index: 4,
+        //   id: 'know',
+        //   name: '知识',
+        // },
+      ],
     };
   },
   methods: {
-    removeItem(val) {
-      const index = this.layout.map(item => item.i).indexOf(val);
-      this.layout.splice(index, 1);
-    },
     // drag
-    drag(e) {
+    drag(e, dragDom) {
+      console.log(dragDom);
+      console.log(e);
       const parentRect = document.getElementById('content').getBoundingClientRect();
       let mouseInGrid = false;
       if (((mouseXY.x > parentRect.left) && (mouseXY.x < parentRect.right)) && ((mouseXY.y > parentRect.top) && (mouseXY.y < parentRect.bottom))) {
@@ -59,8 +83,9 @@ export default {
         }
       }
     },
-    dragend(e) {
+    dragend(e, dragDom) {
       console.log(e);
+      console.log(dragDom);
       const parentRect = document.getElementById('content').getBoundingClientRect();
       let mouseInGrid = false;
       if (((mouseXY.x > parentRect.left) && (mouseXY.x < parentRect.right)) && ((mouseXY.y > parentRect.top) && (mouseXY.y < parentRect.bottom))) {
@@ -77,7 +102,12 @@ export default {
           w: 1,
           h: 1,
           i: Number(DragPos.i) + 1,
+          index: dragDom.index,
+          id: dragDom.id,
+          name: dragDom.name,
         });
+        // DEL left dragableDOM  (拖拽进画布的DOM 从可拖拽列表中移除)
+        this.dragDOMs = this.dragDOMs.filter(dom => dom.id !== dragDom.id);
       }
     },
     addListener() {

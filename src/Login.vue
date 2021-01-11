@@ -22,9 +22,12 @@
                  :w="item.w"
                  :h="item.h"
                  :i="item.i"
-                 :key="item.i">
-        {{item.i}}
-        <span class="remove" @click="removeItem(item.i)">x</span>
+                 :key="item.index">
+        <div>
+          name:{{item.name}}<br>
+          index:{{item.index}}
+        </div>
+        <span class="remove" @click="removeItem(item)">x</span>
       </grid-item>
     </grid-layout>
   </div>
@@ -33,10 +36,10 @@
 <script>
 
 import { GridLayout, GridItem } from 'vue-grid-layout';
-import dragMixin from './mixin/dragMixin.vue';
+import dragBasicMixin from './mixin/dragBasicMixin.vue';
 
 // 生成页面用
-function getRowHeight(rowNum, margin=10) {
+function getRowHeight(rowNum, margin = 10) {
   // contentHeight = rowNum * rowHeight + ((rowNum + 1) * margin)
   debugger;
   const parentRect = document.getElementById('content').getBoundingClientRect();
@@ -47,7 +50,7 @@ function getRowHeight(rowNum, margin=10) {
 export default {
   name: 'Login',
   mixins: [
-    dragMixin,
+    dragBasicMixin,
   ],
   components: {
     GridLayout,
@@ -74,7 +77,7 @@ export default {
     },
   },
   mounted() {
-    this.addListener();
+    // this.addListener();
     this.getInitData();
   },
 };
